@@ -1,0 +1,96 @@
+external_components:
+  - source: github://berfenger/esphome_components
+    components: [ uartpin ]
+esphome:
+  name: hotwaterselector
+  platform: ESP8266
+  board: esp01
+  esp8266_restore_from_flash: True
+
+wifi:
+  networks:
+  - ssid: !secret wifi_ssid
+    password: !secret wifi_pass
+
+# Enable logging
+logger:
+  level: WARN
+  baud_rate: 0
+
+# Enable Home Assistant API
+api:
+  password: !secret api_pass
+  reboot_timeout: 0s
+
+# Enable OTA
+ota:
+  password: !secret ota_pass
+
+mqtt:
+  broker: !secret mqtt_ip
+  port: !secret mqtt_port
+  username: !secret mqtt_user
+  password: !secret mqtt_pass
+  discovery: False
+  discovery_retain: False
+  on_message:
+    - topic: hotwaterselector/cmd/goto
+      then:
+        - cover.control:
+            id: valve
+            position: !lambda |-
+              if (x == "1")
+                return 1.0f;
+              else
+                return 0.0f;
+
+uart:
+  id: uart_bus
+  baud_rate: 115200
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+
+switch:
+  - platform: output
+    output: valve_switch_1
+    id: relay1
+    internal: True
+  - platform: output
+    output: valve_switch_2
+    id: relay2
+    internal: True
+
+output:
+  - platform: uartpin
+    id: valve_switch_1
+    uartpin_id: lc_dual_relay
+    data_high: [0xA0, 0x01, 0x01, 0xA2]
+    data_low: [0xA0, 0x01, 0x00, 0xA1]
+  - platform: uartpin
+    id: valve_switch_2
+    uartpin_id: lc_dual_relay
+    data_high: [0xA0, 0x02, 0x01, 0xA3]
+    data_low: [0xA0, 0x02, 0x00, 0xA2]
+
+uartpin:
+  - id: lc_dual_relay
+    delay: 5s
+    init_data: [0x30, 0x2C, 0x43, 0x4F, 0x4E, 0x4E, 0x45, 0x43, 0x54, 0x0D, 0x0A] # init and turn off wifi connection LED
+
+cover:
+  - platform: time_based
+    name: "Valve3W"
+    id: "valve"
+
+    open_action:
+      - switch.turn_on: relay1
+    open_duration: 12s
+
+    close_action:
+      - switch.turn_on: relay2
+    close_duration: 12s
+
+    stop_action:
+      - switch.turn_off: relay1
+      - delay: 500ms
+      - switch.turn_off: relay2
