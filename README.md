@@ -20,6 +20,16 @@ This repository does not cover the automation system as this depends on the part
 
 <a href="./docs/schema.svg"><img src = "./docs/schema.svg"/></a>
 
+### Customizations
+These are the default values that can be changed using the `substitutions` block on the yaml.
+ * `devicename`: by default, the device is called `hotwaterselector`. This is also the base MQTT path.
+ * `opentime`: Time needed to open/close the valve. By default, the time is set to 12 seconds.
+   * Careful: if time is set too low the valve won't fully open.
+
+### MQTT
+ * Monitor position [0-100]: `hotwaterselector/cover/valve3w/position/state`
+ * Set position: Send `1` or `0` to `hotwaterselector/cmd/goto`
+
 ## Build with ESPHome
 
 I use the docker image method because it does not need any setup steps. If you want to use other build method, please refer to [ESPHome build guides](https://esphome.io/guides/contributing.html#build)

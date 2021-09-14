@@ -1,8 +1,11 @@
 external_components:
   - source: github://berfenger/esphome_components
     components: [ uartpin ]
+substitutions:
+  devicename: hotwaterselector
+  opentime: 12s
 esphome:
-  name: hotwaterselector
+  name: $devicename
   platform: ESP8266
   board: esp01
   esp8266_restore_from_flash: True
@@ -11,11 +14,6 @@ wifi:
   networks:
   - ssid: !secret wifi_ssid
     password: !secret wifi_pass
-
-# Enable logging
-logger:
-  level: WARN
-  baud_rate: 0
 
 # Enable Home Assistant API
 api:
@@ -34,7 +32,7 @@ mqtt:
   discovery: False
   discovery_retain: False
   on_message:
-    - topic: hotwaterselector/cmd/goto
+    - topic: $devicename/cmd/goto
       then:
         - cover.control:
             id: valve
@@ -84,11 +82,11 @@ cover:
 
     open_action:
       - switch.turn_on: relay1
-    open_duration: 12s
+    open_duration: $opentime
 
     close_action:
       - switch.turn_on: relay2
-    close_duration: 12s
+    close_duration: $opentime
 
     stop_action:
       - switch.turn_off: relay1
